@@ -26,3 +26,43 @@
    ```bash
    git clone https://github.com/sleepy-prince/zabbix-monitor-service.git
    cd zabbix-monitor-service
+   ```
+
+2. Создайте файл конфигурации переменных окружения `.env` на основе шаблона:
+   ```bash
+   cp .env.example .env
+   ```
+
+3. Откройте созданный файл `.env` и укажите в нем значения для `POSTGRES_DB`, `POSTGRES_USER` и `POSTGRES_PASSWORD`.
+
+### Шаг 2. Запуск инфраструктуры в Docker
+1. Запустите контейнеры в фоновом режиме:
+   ```bash
+   docker compose up -d
+   ```
+
+2. Откройте в браузере `http://localhost` и войдите, используя стандартный логин `Admin` и пароль `zabbix`.
+
+### Шаг 3. Установка и настройка Zabbix Agent 2
+Для сбора метрик CPU, RAM, диска и сети непосредственно с вашей машины, установите и настройте агент в активном режиме.
+
+1. Установите пакет `zabbix-agent2` с помощью пакетного менеджера вашего дистрибутива (например, `sudo pacman -S zabbix-agent2` для Arch Linux).
+
+2. Откройте конфигурационный файл `/etc/zabbix/zabbix_agent2.conf` от имени суперпользователя и приведите следующие параметры к указанному виду:
+   ```ini
+   Server=127.0.0.1
+   ServerActive=127.0.0.1
+   Hostname=Zabbix server
+   ```
+   *(Примечание: параметр `Hostname` должен строго совпадать с именем узла сети в веб-интерфейсе Zabbix).*
+
+3. Переключите мониторинг в активный режим:
+   * 3.1. В веб-интерфейсе перейдите в **Data collection** -> **Hosts** -> нажмите на узел **"Zabbix server"**.
+   * 3.2. В разделе **Templates** нажмите **Unlink and clear** напротив старого шаблона `Linux by Zabbix agent`.
+   * 3.3. В поле поиска новых шаблонов найдите и прикрепите: `Linux by Zabbix agent active`.
+   * 3.4. Нажмите кнопку **Update**.
+
+4. Запустите службу агента и добавьте её в автозагрузку:
+   ```bash
+   sudo systemctl enable --now zabbix-agent2
+   ```
